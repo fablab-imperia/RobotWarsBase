@@ -32,7 +32,7 @@
  ********************************************************************************/
 
 // set to true to print commands to the serial monitor for debugging //
-#define PRINT_TO_SERIAL_MONITOR  false
+#define PRINT_TO_SERIAL_MONITOR  true
 
 // states //
 enum RobotState {
@@ -50,6 +50,7 @@ void runStateMachine(void);
 void updateHardware(String);
 void setWheelPower(int , int );
 void setWeaponPower(int);
+void setWeapon(int);
 void setStatusLED(bool );
 
 bool getWiFiForceAPMode();
@@ -168,7 +169,7 @@ void handleControlPut(AsyncWebServerRequest *request) {
     String body = request->getParam("body")->value();
     //DBG_OUTPUT_PORT.println("handleControlPut: " + body);
 
-    int index = body.indexOf(":"), index2 = body.indexOf(":", index + 1);
+    int index = body.indexOf(":"), index2 = body.indexOf(":", index + 1), index3 = body.indexOf(":", index2 + 1);
     int i = body.substring(0, index).toInt();
     int j = (index2 >= 0)? 
       body.substring(index + 1, index2).toInt(): 
@@ -177,8 +178,14 @@ void handleControlPut(AsyncWebServerRequest *request) {
       body.substring(index2 + 1).toInt(): 
       0;
   
+
+    int l = (index3 >= 0)? 
+      body.substring(index3 + 1).toInt(): 
+      0;
+
     setWheelPower(i, j);
     setWeaponPower(k);
+    setWeapon(l);
       
     request->send(200, "text/plain", "ok");
   } else {
@@ -211,6 +218,7 @@ void onWSEvent(AsyncWebSocket *server, AsyncWebSocketClient *client, AwsEventTyp
       enterState(STATE_DRIVING_WITH_TIMEOUT);
       setWheelPower(0, 0);
       setWeaponPower(0);
+      setWeapon(0);
       break;
     case WS_EVT_DISCONNECT:
       DBG_OUTPUT_PORT.printf("[%u] Disconnected!\n", client->id());
@@ -270,6 +278,8 @@ void webSocketMessage(String msg) {
 #define ESC_MIN_USEC    900
 #define ESC_MAX_USEC    1800
 
+#define WEAPON_PIN PIN_D7
+
 Servo weaponESC;
 
 // configure the hardware //
@@ -279,6 +289,7 @@ void setupHardware() {
   pinMode(PIN_L_DIR, OUTPUT);
   pinMode(PIN_R_PWM, OUTPUT);
   pinMode(PIN_R_DIR, OUTPUT);
+  pinMode(WEAPON_PIN, OUTPUT);
 
   // LED to output //
   pinMode(PIN_LED2, OUTPUT);
@@ -325,22 +336,33 @@ void setWheelPower(int left, int right) {
 // set the weapon power //
 void setWeaponPower(int power) {  
   if(PRINT_TO_SERIAL_MONITOR) {
-    DBG_OUTPUT_PORT.printf(", weapon: %d\n", power);
+    DBG_OUTPUT_PORT.printf(", weapon power: %d\n", power);
   }
   int usec = map(power, 0, 1023, ESC_MIN_USEC, ESC_MAX_USEC);
   weaponESC.writeMicroseconds(usec);
 }
 
+// set the weapon power //
+void setWeapon(int value) {  
+  if(PRINT_TO_SERIAL_MONITOR) {
+    DBG_OUTPUT_PORT.printf(", weapon: %d\n", value);
+  }
+  
+  digitalWrite(WEAPON_PIN,value);
+}
+
+
 // interpret a command string //
-//  format: "${leftPower}:${rightPower}(:${weaponPower})?"
+//  format: "${leftPower}:${rightPower}(:${weaponPower})?:$(weapon)"
 //
 //  where:  leftPower   - int [-1023, 1023]
 //          rightPower  - int [-1023, 1023]
-//          weaponPower - int [-1023, 1023] (optional)
+//          weaponPower - int [-1023, 1023] (optional)\
+//            weaapon - int [0,1]
 //
 //  positive values are forward 
 void updateHardware(String cmd) {
-  int index = cmd.indexOf(":"), index2 = cmd.indexOf(":", index + 1);
+  int index = cmd.indexOf(":"), index2 = cmd.indexOf(":", index + 1), index3 = cmd.indexOf(":", index2 + 1);
   int leftPower  = cmd.substring(0, index).toInt();
   int rightPower = (index2 >= 0)? 
     cmd.substring(index + 1, index2).toInt(): 
@@ -348,9 +370,13 @@ void updateHardware(String cmd) {
   int weaponPower = (index2 >= 0)? 
     cmd.substring(index2 + 1).toInt(): 
     0;
+  int weapon = (index3 >= 0)? 
+    cmd.substring(index3 + 1).toInt(): 
+    0;
   
   setWheelPower(leftPower, rightPower);
   setWeaponPower(weaponPower);
+  setWeapon(weapon);
 }
 
 /********************************************************************************

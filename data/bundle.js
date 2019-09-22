@@ -1054,6 +1054,6 @@ Promise.all([ getHardwareConfig, waitForLoad ])
     addError({ type: 'SCRIPT', message: err.message })
   })
 function getPacket (json) {
-  return ((json.leftMotor) + ":" + (json.rightMotor) + ":" + (json.weaponMotor))
+  return ((json.leftMotor) + ":" + (json.rightMotor) + ":" + (json.weaponMotor) + ":" + (json.weapon))
 }
 //# sourceMappingURL=bundle.js.map
