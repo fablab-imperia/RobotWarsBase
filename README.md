@@ -1,2 +1,8 @@
 # RobotWarsBase
-Codice Base utilizzato per i robot da combattimenti nei progetti con Puerto
+Codice Base utilizzato per i robot da combattimenti nei progetti con Puerto.
+
+Questo codice e' basato su quello disponibile qui: https://github.com/jmalins/BattleBot-Control ed e' stato leggermente modificato per adattarlo alle nostre esigenze
+
+
+
+
