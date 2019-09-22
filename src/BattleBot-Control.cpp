@@ -3,6 +3,7 @@
   Copyright (c) 2016-17 Jeff Malins. All rights reserved.
   
 */
+#include <Arduino.h>
 
 #include <ESP8266WiFi.h>
 #include <ESP8266mDNS.h>
@@ -47,6 +48,10 @@ enum RobotState {
 void enterState(RobotState);
 void runStateMachine(void);
 void updateHardware(String);
+void setWheelPower(int , int );
+void setWeaponPower(int);
+void setStatusLED(bool );
+
 bool getWiFiForceAPMode();
 
 #define DBG_OUTPUT_PORT Serial
